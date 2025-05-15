@@ -1,0 +1,39 @@
+services:
+  staffhabit.api:
+    image: ${DOCKER_REGISTRY-}staffhabitapi
+    build:
+      context: .
+      dockerfile: StaffHabit.Api/Dockerfile
+    ports:     
+      - 5000:8080
+      - 5001:8081
+    environment:
+       # Seq
+       - OTEL_EXPORTER_OTLP_ENDPOINT=http://staffhabit.seq:5341/ingest/otlp
+       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+
+  staffhabit.postgres:
+    image: postgres:17.2
+    environment:
+       POSTGRES_DB: staffhabit
+       POSTGRES_USER: postgres
+       POSTGRES_PASSWORD: postgres
+    volumes:
+       - ./.containers/postgres_data:/var/lib/postgresql/data
+    ports:
+        - 5432:5432
+
+  staffhabit.seq:
+    image: datalust/seq:2024.3
+    volumes:
+      - ./.containers/seq_data:/data
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - 8080:80
+      - 5341:5341
+
+
+
+
+ 
