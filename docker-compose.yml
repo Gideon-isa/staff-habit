@@ -8,7 +8,7 @@ services:
       - 5000:8080
       - 5001:8081
     environment:
-       # Seq
+       # Seq 
        - OTEL_EXPORTER_OTLP_ENDPOINT=http://staffhabit.seq:5341/ingest/otlp
        - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 
