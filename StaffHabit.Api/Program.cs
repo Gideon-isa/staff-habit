@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
@@ -11,6 +12,15 @@ using StaffHabit.Api.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddProblemDetails(conf =>
+{
+    conf.CustomizeProblemDetails = contex =>
+    {
+        contex.ProblemDetails.Extensions.TryAdd("requestId", contex.HttpContext.TraceIdentifier);
+    };
+ });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(

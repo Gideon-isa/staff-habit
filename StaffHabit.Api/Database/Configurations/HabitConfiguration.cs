@@ -4,7 +4,7 @@ using StaffHabit.Api.Entities;
 
 namespace StaffHabit.Api.Database.Configurations;
 
-public class StaffConfiguration : IEntityTypeConfiguration<Habit>
+public class HabitConfiguration : IEntityTypeConfiguration<Habit>
 {
     public void Configure(EntityTypeBuilder<Habit> builder)
     { 
@@ -18,5 +18,8 @@ public class StaffConfiguration : IEntityTypeConfiguration<Habit>
             targetBuilder.Property(t => t.Unit).HasMaxLength(100);
         });
         builder.OwnsOne(h => h.Milestone);
+        builder.HasMany(h => h.Tags)
+            .WithMany()
+            .UsingEntity<HabitTag>();
     }                                                          
 }

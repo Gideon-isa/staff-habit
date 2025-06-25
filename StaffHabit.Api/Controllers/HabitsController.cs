@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StaffHabit.Api.Database;
@@ -26,11 +27,11 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
 
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<HabitDto>> GetHabit([FromRoute] string id)
+    public async Task<ActionResult<HabitWithTagsDto>> GetHabit([FromRoute] string id)
     {
-        HabitDto habit = await dbContext.Habits
+        HabitWithTagsDto habit = await dbContext.Habits
             .Where(h => h.Id == id)
-            .Select(HabitQueries.ProjectToDto()).FirstOrDefaultAsync();
+            .Select(HabitQueries.ProjectToHabitWithTagsDto()).FirstOrDefaultAsync();
 
         if (habit == null)
         {
@@ -40,8 +41,13 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
     }
 
     [HttpPost]
-    public async Task<ActionResult<HabitDto>> CreateHabit(CreateHabitDto createHabitDto)
+    public async Task<ActionResult<HabitDto>> CreateHabit(CreateHabitDto createHabitDto, IValidator<CreateHabitDto> validator)
     {
+        var validationResult = await validator.ValidateAsync(createHabitDto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.ToDictionary());
+        }
         Habit habit = createHabitDto.ToEntity();
         dbContext.Habits.Add(habit);
         await dbContext.SaveChangesAsync();
@@ -61,6 +67,8 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         await dbContext.SaveChangesAsync();
         return NoContent();
     }
+
+
 
     [HttpPatch("{id}")]
     public async Task<ActionResult> PatchHabit([FromRoute]string id, [FromBody]JsonPatchDocument<HabitDto> patchDocument)
