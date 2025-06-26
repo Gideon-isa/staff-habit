@@ -13,10 +13,18 @@ namespace StaffHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits()
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery(Name = "q")] string? search, HabitType? type, HabitStatus? status)
     {
+
+        search ??= search?.Trim().ToLower();
         List<HabitDto> habits = await dbContext
-            .Habits.Select(HabitQueries.ProjectToDto()).ToListAsync();
+            .Habits
+            .Where(h => search == null ||
+                        h.Name.ToLower().Contains(search) ||
+                        h.Description != null && h.Description.ToLower().Contains(search))
+            .Where(h => type == null || h.Type == type)
+            .Where(h => status == null || h.Status == status)
+            .Select(HabitQueries.ProjectToDto()).ToListAsync();
 
         var habitsCollectionDto = new HabitsCollectionDto
         {
@@ -43,7 +51,6 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
     [HttpPost]
     public async Task<ActionResult<HabitDto>> CreateHabit(CreateHabitDto createHabitDto, IValidator<CreateHabitDto> validator)
     {
-
         await validator.ValidateAndThrowAsync(createHabitDto);
         Habit habit = createHabitDto.ToEntity();
         dbContext.Habits.Add(habit);
@@ -64,8 +71,6 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         await dbContext.SaveChangesAsync();
         return NoContent();
     }
-
-
 
     [HttpPatch("{id}")]
     public async Task<ActionResult> PatchHabit([FromRoute]string id, [FromBody]JsonPatchDocument<HabitDto> patchDocument)
