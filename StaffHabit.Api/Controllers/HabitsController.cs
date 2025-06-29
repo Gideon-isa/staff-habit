@@ -1,10 +1,12 @@
-﻿using FluentValidation;
+﻿using System.Linq.Expressions;
+using FluentValidation;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StaffHabit.Api.Database;
 using StaffHabit.Api.DTOs.Habits;
 using StaffHabit.Api.Entities;
+using StaffHabit.Api.Services.Sorting;
 
 namespace StaffHabit.Api.Controllers;
 
@@ -13,17 +15,20 @@ namespace StaffHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery(Name = "q")] string? search, HabitType? type, HabitStatus? status)
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitsQueryParameters query, SortMappingProvider sortMappingProvider)
     {
+        query.Search ??= query.Search?.Trim().ToLower();
 
-        search ??= search?.Trim().ToLower();
+        SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
+
         List<HabitDto> habits = await dbContext
             .Habits
-            .Where(h => search == null ||
-                        h.Name.ToLower().Contains(search) ||
-                        h.Description != null && h.Description.ToLower().Contains(search))
-            .Where(h => type == null || h.Type == type)
-            .Where(h => status == null || h.Status == status)
+            .Where(h => query.Search == null ||
+                        h.Name.ToLower().Contains(query.Search) ||
+                        h.Description != null && h.Description.ToLower().Contains(query.Search))
+            .Where(h => query.Type == null || h.Type == query.Type)
+            .ApplySort(query.Sort, sortMappings)
+            .Where(h => query.Status == null || h.Status == query.Status)
             .Select(HabitQueries.ProjectToDto()).ToListAsync();
 
         var habitsCollectionDto = new HabitsCollectionDto

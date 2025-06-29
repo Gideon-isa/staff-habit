@@ -16,9 +16,17 @@ namespace StaffHabit.Api.Controllers;
 public sealed class TagsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<TagsCollectionDto>> GetHabits()
+    public async Task<ActionResult<TagsCollectionDto>> GetHabits([FromQuery] TagsQueryParamters tagsQueryParamters)
     {
-        List<TagDto> tags = await dbContext.Tags.Select(TagsQueries.ProjectToDto()).ToListAsync();
+        tagsQueryParamters.Search ??= tagsQueryParamters.Search?.Trim().ToLower();
+        List<TagDto> tags = await dbContext
+            .Tags
+            .Where(t => tagsQueryParamters.Search == null ||
+                        t.Name.ToLower().Contains(tagsQueryParamters.Search) ||
+                        t.Description != null && t.Description.ToLower().Contains(tagsQueryParamters.Search))
+            .Where(t => tagsQueryParamters.Name == null || t.Name.Contains(tagsQueryParamters.Name))
+            //.Where(t => tagsQueryParamters.Description == null).Where(t => t.Description != null && t.Description.Contains(tagsQueryParamters.Description ??= string.Empty))
+            .Select(TagsQueries.ProjectToDto()).ToListAsync();
 
         var tagsCollectionDto = new TagsCollectionDto
         {

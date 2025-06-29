@@ -7,8 +7,11 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using StaffHabit.Api.Database;
+using StaffHabit.Api.DTOs.Habits;
+using StaffHabit.Api.Entities;
 using StaffHabit.Api.Extensions;
 using StaffHabit.Api.Middleware;
+using StaffHabit.Api.Services.Sorting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +35,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Application))
     .UseSnakeCaseNamingConvention());
 
-
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(builder.Environment.ApplicationName))
     .WithTracing(trace => trace
@@ -51,6 +53,8 @@ builder.Logging.AddOpenTelemetry(options =>
     options.IncludeFormattedMessage = true;
 });
 
+builder.Services.AddTransient<SortMappingProvider>();
+builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ => HabitMappings.SortMapping);
 //builder.WebHost.ConfigureKestrel(options =>
 //{
 //    options.ListenAnyIP(8080); // HTTP port
@@ -82,7 +86,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 app.UseAuthorization();
-
 app.MapControllers();
 
 await app.RunAsync();

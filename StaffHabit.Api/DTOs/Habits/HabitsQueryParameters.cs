@@ -1,5 +1,13 @@
-﻿namespace StaffHabit.Api.DTOs.Habits;
+﻿using Microsoft.AspNetCore.Mvc;
+using StaffHabit.Api.Entities;
 
-public class HabitsQueryParameters
+namespace StaffHabit.Api.DTOs.Habits;
+
+public sealed class HabitsQueryParameters
 {
+    [FromQuery(Name ="q")]
+    public string? Search { get; set; }
+    public HabitType? Type { get; set; }
+    public HabitStatus? Status { get; set; }
+    public string? Sort { get; set; }
 }
