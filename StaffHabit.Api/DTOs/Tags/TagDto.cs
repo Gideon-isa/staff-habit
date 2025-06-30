@@ -1,9 +1,6 @@
-﻿namespace StaffHabit.Api.DTOs.Tags;
+﻿using StaffHabit.Api.DTOs.Habits;
 
-public sealed record TagsCollectionDto
-{
-    public List<TagDto> Data { get; set; } = [];
-}
+namespace StaffHabit.Api.DTOs.Tags;
 public sealed record TagDto
 {
     public required string Id { get; init; }

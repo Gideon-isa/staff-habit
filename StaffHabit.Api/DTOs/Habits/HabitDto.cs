@@ -1,11 +1,6 @@
 ﻿using StaffHabit.Api.Entities;
 
 namespace StaffHabit.Api.DTOs.Habits;
-
-public sealed record HabitsCollectionDto
-{
-    public List<HabitDto> Data { get; set; } = [];
-}
 public sealed record HabitDto
 {
     public required string Id { get; init; }

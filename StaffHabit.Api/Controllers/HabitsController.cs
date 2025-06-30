@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StaffHabit.Api.Database;
+using StaffHabit.Api.DTOs.Common;
 using StaffHabit.Api.DTOs.Habits;
 using StaffHabit.Api.Entities;
 using StaffHabit.Api.Services.Sorting;
@@ -16,7 +17,7 @@ namespace StaffHabit.Api.Controllers;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitsQueryParameters query, SortMappingProvider sortMappingProvider)
+    public async Task<ActionResult<PaginationResult<HabitDto>>> GetHabits([FromQuery] HabitsQueryParameters query, SortMappingProvider sortMappingProvider)
     {
         if (!sortMappingProvider.ValidateMappings<HabitDto, Habit>(query.Sort))
         {
@@ -29,21 +30,19 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         query.Search ??= query.Search?.Trim().ToLower();
         SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
 
-        List<HabitDto> habits = await dbContext
+        IQueryable<HabitDto> habitsQuery =  dbContext
             .Habits
             .Where(h => query.Search == null ||
                         h.Name.ToLower().Contains(query.Search) ||
                         h.Description != null && h.Description.ToLower().Contains(query.Search))
             .Where(h => query.Type == null || h.Type == query.Type)
-            .ApplySort(query.Sort, sortMappings)
             .Where(h => query.Status == null || h.Status == query.Status)
-            .Select(HabitQueries.ProjectToDto()).ToListAsync();
+            .ApplySort(query.Sort, sortMappings)
+            .Select(HabitQueries.ProjectToDto());
 
-        var habitsCollectionDto = new HabitsCollectionDto
-        {
-            Data = habits
-        };
-        return Ok(habitsCollectionDto);
+
+        var PaginationResult = await PaginationResult<HabitDto>.CreateAsync(habitsQuery, query.Page, query.PageSize);
+        return Ok(PaginationResult);
     }
 
 

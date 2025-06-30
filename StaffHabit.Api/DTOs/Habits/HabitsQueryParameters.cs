@@ -10,4 +10,6 @@ public sealed class HabitsQueryParameters
     public HabitType? Type { get; set; }
     public HabitStatus? Status { get; set; }
     public string? Sort { get; set; }
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 10;
 }
