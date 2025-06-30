@@ -7,6 +7,7 @@ using StaffHabit.Api.Database;
 using StaffHabit.Api.DTOs.Habits;
 using StaffHabit.Api.Entities;
 using StaffHabit.Api.Services.Sorting;
+using StaffHabit.Api.Services.Utility;
 
 namespace StaffHabit.Api.Controllers;
 
@@ -17,8 +18,15 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
     [HttpGet]
     public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitsQueryParameters query, SortMappingProvider sortMappingProvider)
     {
+        if (!sortMappingProvider.ValidateMappings<HabitDto, Habit>(query.Sort))
+        {
+            return Problem(
+                detail: $"The provided sort parameter isn't valid: '{query.Sort}'.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid Sort Field"
+            );
+        }
         query.Search ??= query.Search?.Trim().ToLower();
-
         SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
 
         List<HabitDto> habits = await dbContext

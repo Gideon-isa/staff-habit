@@ -53,8 +53,8 @@ builder.Logging.AddOpenTelemetry(options =>
     options.IncludeFormattedMessage = true;
 });
 
-builder.Services.AddTransient<SortMappingProvider>();
 builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ => HabitMappings.SortMapping);
+builder.Services.AddTransient<SortMappingProvider>();
 //builder.WebHost.ConfigureKestrel(options =>
 //{
 //    options.ListenAnyIP(8080); // HTTP port
