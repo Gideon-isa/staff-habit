@@ -16,7 +16,7 @@ namespace StaffHabit.Api.Controllers;
 public sealed class TagsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<TagsCollectionDto>> GetHabits([FromQuery] TagsQueryParamters tagsQueryParamters)
+    public async Task<ActionResult<TagsCollectionDto>> GetTags([FromQuery] TagsQueryParamters tagsQueryParamters)
     {
         tagsQueryParamters.Search ??= tagsQueryParamters.Search?.Trim().ToLower();
         List<TagDto> tags = await dbContext

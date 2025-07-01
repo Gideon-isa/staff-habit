@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Newtonsoft.Json.Serialization;
 using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -11,6 +12,7 @@ using StaffHabit.Api.DTOs.Habits;
 using StaffHabit.Api.Entities;
 using StaffHabit.Api.Extensions;
 using StaffHabit.Api.Middleware;
+using StaffHabit.Api.Services;
 using StaffHabit.Api.Services.Sorting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,6 +57,7 @@ builder.Logging.AddOpenTelemetry(options =>
 
 builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ => HabitMappings.SortMapping);
 builder.Services.AddTransient<SortMappingProvider>();
+builder.Services.AddTransient<DataShapingService>();
 //builder.WebHost.ConfigureKestrel(options =>
 //{
 //    options.ListenAnyIP(8080); // HTTP port
@@ -68,7 +71,7 @@ builder.Services.AddControllers(options =>
 {
     options.ReturnHttpNotAcceptable = true;
 })
-.AddNewtonsoftJson()
+.AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver())
 .AddXmlSerializerFormatters();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
